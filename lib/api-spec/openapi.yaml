@@ -3,13 +3,24 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Flirt & Play – game platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: users
+    description: User profile operations
+  - name: rooms
+    description: Game room operations
+  - name: games
+    description: Game session and move operations
+  - name: flirt
+    description: Post-game flirt message operations
+  - name: Storage
+    description: Object storage upload and serving endpoints.
+
 paths:
   /healthz:
     get:
@@ -24,6 +35,509 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── Users ────────────────────────────────────────────────────────────────
+  /users/me:
+    get:
+      operationId: getMe
+      tags: [users]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+    put:
+      operationId: updateMe
+      tags: [users]
+      summary: Update current user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserProfileUpdate"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /users/me/stats:
+    get:
+      operationId: getMyStats
+      tags: [users]
+      summary: Get current user win/loss stats and flirt counts
+      responses:
+        "200":
+          description: User stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserStats"
+
+  # ── Rooms ─────────────────────────────────────────────────────────────────
+  /rooms:
+    post:
+      operationId: createRoom
+      tags: [rooms]
+      summary: Create a new game room and get an invite code
+      responses:
+        "201":
+          description: Room created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Room"
+
+  /rooms/my:
+    get:
+      operationId: listMyRooms
+      tags: [rooms]
+      summary: List all rooms the current user is a participant in
+      responses:
+        "200":
+          description: List of rooms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Room"
+
+  /rooms/join/{code}:
+    get:
+      operationId: getRoomByCode
+      tags: [rooms]
+      summary: Look up a room by invite code
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Room details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Room"
+        "404":
+          description: Room not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /rooms/{roomId}:
+    get:
+      operationId: getRoom
+      tags: [rooms]
+      summary: Get room details by ID
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Room details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Room"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /rooms/{roomId}/join:
+    post:
+      operationId: joinRoom
+      tags: [rooms]
+      summary: Join a room as guest player
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Joined room
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Room"
+        "400":
+          description: Room full or already joined
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Room not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  # ── Games ─────────────────────────────────────────────────────────────────
+  /game-types:
+    get:
+      operationId: listGameTypes
+      tags: [games]
+      summary: List available game types
+      responses:
+        "200":
+          description: Game types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GameType"
+
+  /rooms/{roomId}/games:
+    get:
+      operationId: listRoomGames
+      tags: [games]
+      summary: Get game history for a room (newest first)
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of game sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GameSession"
+    post:
+      operationId: createGame
+      tags: [games]
+      summary: Start a new game in the room
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameInput"
+      responses:
+        "201":
+          description: Game session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameSession"
+        "400":
+          description: Validation error or room not ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /rooms/{roomId}/games/current:
+    get:
+      operationId: getCurrentGame
+      tags: [games]
+      summary: Get the active game session for a room
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Current active game session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameSession"
+        "404":
+          description: No active game
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /games/{gameId}:
+    get:
+      operationId: getGame
+      tags: [games]
+      summary: Get a game session by ID
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Game session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameSession"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /games/{gameId}/moves:
+    get:
+      operationId: listMoves
+      tags: [games]
+      summary: Get all moves for a game (for playback)
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of moves
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GameMove"
+    post:
+      operationId: makeMove
+      tags: [games]
+      summary: Make a move in a game
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MoveInput"
+      responses:
+        "200":
+          description: Updated game session after move
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameSession"
+        "400":
+          description: Not your turn or invalid move
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "403":
+          description: Forbidden – not a player in this game
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /games/{gameId}/rematch:
+    post:
+      operationId: requestRematch
+      tags: [games]
+      summary: Request a rematch – creates new game of same type in room
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "201":
+          description: New game session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameSession"
+        "400":
+          description: Game not finished yet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  # ── Flirt Messages ────────────────────────────────────────────────────────
+  /games/{gameId}/flirt:
+    get:
+      operationId: getFlirtMessage
+      tags: [flirt]
+      summary: Get the flirt message sent after this game
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Flirt message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlirtMessage"
+        "404":
+          description: Not sent yet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+    post:
+      operationId: sendFlirtMessage
+      tags: [flirt]
+      summary: Send a flirt message from the loser to the winner
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FlirtMessageInput"
+      responses:
+        "201":
+          description: Flirt message sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlirtMessage"
+        "400":
+          description: Validation error or game not finished
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  # ── Object Storage ────────────────────────────────────────────────────────
+  /storage/uploads/request-url:
+    post:
+      tags: [Storage]
+      operationId: requestUploadUrl
+      summary: Request a presigned URL for file upload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadUrlRequest'
+      responses:
+        '200':
+          description: Presigned upload URL generated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadUrlResponse'
+        '400':
+          description: Missing or invalid required fields.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '500':
+          description: Failed to generate upload URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /storage/public-objects/{filePath}:
+    get:
+      tags: [Storage]
+      operationId: getPublicObject
+      summary: Serve a public asset
+      parameters:
+        - name: filePath
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Object content
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /storage/objects/{objectPath}:
+    get:
+      tags: [Storage]
+      operationId: getStorageObject
+      summary: Serve an uploaded object entity
+      parameters:
+        - name: objectPath
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Object content
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +548,223 @@ components:
       required:
         - status
 
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    # ── User ──────────────────────────────────────────────────────────────
+    UserProfile:
+      type: object
+      required: [clerkId, username, createdAt]
+      properties:
+        clerkId:
+          type: string
+        username:
+          type: string
+        avatarPath:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    UserProfileUpdate:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 2
+          maxLength: 30
+        avatarPath:
+          type: ["string", "null"]
+
+    UserStats:
+      type: object
+      required: [wins, losses, flirtsSent, flirtsReceived, gamesPlayed]
+      properties:
+        wins:
+          type: integer
+        losses:
+          type: integer
+        gamesPlayed:
+          type: integer
+        flirtsSent:
+          type: integer
+        flirtsReceived:
+          type: integer
+
+    # ── Room ──────────────────────────────────────────────────────────────
+    Room:
+      type: object
+      required: [id, code, status, creatorClerkId, createdAt]
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        status:
+          type: string
+          enum: [waiting, active, finished]
+        creatorClerkId:
+          type: string
+        guestClerkId:
+          type: ["string", "null"]
+        creatorProfile:
+          $ref: "#/components/schemas/UserProfile"
+        guestProfile:
+          $ref: "#/components/schemas/UserProfile"
+        createdAt:
+          type: string
+          format: date-time
+
+    # ── Game Types ────────────────────────────────────────────────────────
+    GameType:
+      type: object
+      required: [key, name, description, minPlayers, maxPlayers]
+      properties:
+        key:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        minPlayers:
+          type: integer
+        maxPlayers:
+          type: integer
+
+    # ── Game Session ──────────────────────────────────────────────────────
+    GameSession:
+      type: object
+      required: [id, roomId, gameType, playerXClerkId, playerOClerkId, currentTurnClerkId, status, state, createdAt]
+      properties:
+        id:
+          type: integer
+        roomId:
+          type: integer
+        gameType:
+          type: string
+        playerXClerkId:
+          type: string
+        playerOClerkId:
+          type: string
+        currentTurnClerkId:
+          type: string
+        winnerClerkId:
+          type: ["string", "null"]
+        isDraw:
+          type: boolean
+        status:
+          type: string
+          enum: [active, finished]
+        state:
+          type: object
+          description: Game-specific board/state as JSON
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: ["string", "null"]
+          format: date-time
+        playerXProfile:
+          $ref: "#/components/schemas/UserProfile"
+        playerOProfile:
+          $ref: "#/components/schemas/UserProfile"
+        flirtSent:
+          type: boolean
+
+    GameInput:
+      type: object
+      required: [gameType]
+      properties:
+        gameType:
+          type: string
+          enum: [tic-tac-toe, connect-four, rock-paper-scissors, word-duel, truth-spinner]
+
+    # ── Move ──────────────────────────────────────────────────────────────
+    GameMove:
+      type: object
+      required: [id, gameId, playerClerkId, moveData, createdAt]
+      properties:
+        id:
+          type: integer
+        gameId:
+          type: integer
+        playerClerkId:
+          type: string
+        moveData:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+
+    MoveInput:
+      type: object
+      required: [moveData]
+      properties:
+        moveData:
+          type: object
+          additionalProperties: true
+
+    # ── Flirt ─────────────────────────────────────────────────────────────
+    FlirtMessage:
+      type: object
+      required: [id, gameId, fromClerkId, toClerkId, message, createdAt]
+      properties:
+        id:
+          type: integer
+        gameId:
+          type: integer
+        fromClerkId:
+          type: string
+        toClerkId:
+          type: string
+        message:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        fromProfile:
+          $ref: "#/components/schemas/UserProfile"
+        toProfile:
+          $ref: "#/components/schemas/UserProfile"
+
+    FlirtMessageInput:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 500
+
+    # ── Storage ───────────────────────────────────────────────────────────
+    UploadUrlRequest:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        size:
+          type: integer
+          minimum: 1
+        contentType:
+          type: string
+          minLength: 1
+
+    UploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL:
+          type: string
+          format: uri
+        objectPath:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/UploadUrlRequest'
