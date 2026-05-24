@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, LogIn, Trophy, Heart, Gamepad2, Settings, LogOut } from "lucide-react";
-import { useClerk } from "@clerk/clerk-react";
+import { useClerk } from "@clerk/react";
 
 export default function Lobby() {
   const { data: stats, isLoading: isLoadingStats } = useGetMyStats();
