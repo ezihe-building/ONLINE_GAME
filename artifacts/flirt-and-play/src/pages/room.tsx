@@ -36,14 +36,16 @@ export default function Room() {
 
   const createGame = useCreateGame();
 
+  const gamesList = Array.isArray(games) ? games : [];
+
   useEffect(() => {
-    if (games && games.length > 0) {
-      const activeGame = games.find(g => g.status === 'active');
+    if (gamesList.length > 0) {
+      const activeGame = gamesList.find(g => g.status === 'active');
       if (activeGame) {
         setLocation(`/rooms/${id}/games/${activeGame.id}`);
       }
     }
-  }, [games, id, setLocation]);
+  }, [gamesList, id, setLocation]);
 
   const copyCode = () => {
     if (room?.code) {
@@ -163,11 +165,11 @@ export default function Room() {
               ))}
             </div>
             
-            {games && games.filter(g => g.status === 'finished').length > 0 && (
+            {gamesList.filter(g => g.status === 'finished').length > 0 && (
               <div className="mt-12">
                 <h3 className="text-xl font-display font-bold mb-4 text-muted-foreground">Previous Matches</h3>
                 <div className="flex flex-col gap-2">
-                  {games.filter(g => g.status === 'finished').map(game => (
+                  {gamesList.filter(g => g.status === 'finished').map(game => (
                     <div key={game.id} className="p-4 rounded-xl bg-card border border-border/50 flex justify-between items-center">
                       <div>
                         <span className="font-medium text-foreground">{gameTypes?.find(t => t.key === game.gameType)?.name || game.gameType}</span>
