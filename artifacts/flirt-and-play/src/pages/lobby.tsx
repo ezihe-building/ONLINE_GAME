@@ -1,17 +1,17 @@
 import { useGetMyStats, useListMyRooms, useGetMe } from "@workspace/api-client-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, LogIn, Trophy, Heart, Gamepad2, Settings, LogOut } from "lucide-react";
-import { useClerk } from "@clerk/react";
+import { useAuth } from "@/lib/auth";
 
 export default function Lobby() {
   const { data: stats, isLoading: isLoadingStats } = useGetMyStats();
   const { data: rooms, isLoading: isLoadingRooms } = useListMyRooms();
   const { data: profile, isLoading: isLoadingProfile } = useGetMe();
-  const { signOut } = useClerk();
+  const { signOut } = useAuth();
 
   return (
     <div className="min-h-[100dvh] bg-background text-foreground flex flex-col">
@@ -27,7 +27,7 @@ export default function Lobby() {
               <Settings className="h-5 w-5" />
             </Button>
           </Link>
-          <Button variant="ghost" size="icon" onClick={() => signOut()} className="rounded-full">
+          <Button variant="ghost" size="icon" onClick={signOut} className="rounded-full">
             <LogOut className="h-5 w-5" />
           </Button>
           {isLoadingProfile ? (
@@ -75,9 +75,7 @@ export default function Lobby() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-sm text-muted-foreground">
-                Daring moves
-              </div>
+              <div className="text-sm text-muted-foreground">Daring moves</div>
             </CardContent>
           </Card>
 
@@ -92,9 +90,7 @@ export default function Lobby() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-sm text-muted-foreground">
-                Total matches
-              </div>
+              <div className="text-sm text-muted-foreground">Total matches</div>
             </CardContent>
           </Card>
         </section>
@@ -139,7 +135,7 @@ export default function Lobby() {
               </div>
             ) : (
               rooms?.map((room) => {
-                const isCreator = room.creatorClerkId === profile?.clerkId;
+                const isCreator = room.creatorUserId === profile?.id;
                 const opponent = isCreator ? room.guestProfile : room.creatorProfile;
                 
                 return (

@@ -10,22 +10,24 @@ function generateCode(): string {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
-async function getProfile(clerkId: string | null | undefined) {
-  if (!clerkId) return undefined;
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.clerkId, clerkId));
-  return user ?? undefined;
+async function getProfile(userId: number | null | undefined) {
+  if (!userId) return undefined;
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+  if (!user) return undefined;
+  const { passwordHash: _ph, ...safe } = user;
+  return safe ?? undefined;
 }
 
 async function enrichRoom(room: typeof roomsTable.$inferSelect) {
   const [creatorProfile, guestProfile] = await Promise.all([
-    getProfile(room.creatorClerkId),
-    getProfile(room.guestClerkId ?? undefined),
+    getProfile(room.creatorUserId),
+    getProfile(room.guestUserId ?? undefined),
   ]);
   return { ...room, creatorProfile, guestProfile };
 }
 
 router.post("/rooms", requireAuth, async (req, res): Promise<void> => {
-  const clerkId = getUserId(req);
+  const userId = getUserId(req);
   let code = generateCode();
   let attempts = 0;
   while (attempts < 5) {
@@ -36,17 +38,17 @@ router.post("/rooms", requireAuth, async (req, res): Promise<void> => {
   }
   const [room] = await db
     .insert(roomsTable)
-    .values({ code, creatorClerkId: clerkId, status: "waiting" })
+    .values({ code, creatorUserId: userId, status: "waiting" })
     .returning();
   res.status(201).json(await enrichRoom(room));
 });
 
 router.get("/rooms/my", requireAuth, async (req, res): Promise<void> => {
-  const clerkId = getUserId(req);
+  const userId = getUserId(req);
   const rooms = await db
     .select()
     .from(roomsTable)
-    .where(or(eq(roomsTable.creatorClerkId, clerkId), eq(roomsTable.guestClerkId, clerkId)));
+    .where(or(eq(roomsTable.creatorUserId, userId), eq(roomsTable.guestUserId, userId)));
   const enriched = await Promise.all(rooms.map(enrichRoom));
   res.json(enriched);
 });
@@ -85,23 +87,23 @@ router.post("/rooms/:roomId/join", requireAuth, async (req, res): Promise<void> 
     res.status(400).json({ error: params.error.message });
     return;
   }
-  const clerkId = getUserId(req);
+  const userId = getUserId(req);
   const [room] = await db.select().from(roomsTable).where(eq(roomsTable.id, params.data.roomId));
   if (!room) {
     res.status(404).json({ error: "Room not found" });
     return;
   }
-  if (room.guestClerkId && room.guestClerkId !== clerkId) {
+  if (room.guestUserId && room.guestUserId !== userId) {
     res.status(400).json({ error: "Room is full" });
     return;
   }
-  if (room.creatorClerkId === clerkId) {
+  if (room.creatorUserId === userId) {
     res.json(await enrichRoom(room));
     return;
   }
   const [updated] = await db
     .update(roomsTable)
-    .set({ guestClerkId: clerkId, status: "active" })
+    .set({ guestUserId: userId, status: "active" })
     .where(eq(roomsTable.id, params.data.roomId))
     .returning();
   res.json(await enrichRoom(updated));

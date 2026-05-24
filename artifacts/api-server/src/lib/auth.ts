@@ -1,9 +1,13 @@
-import { getAuth } from "@clerk/express";
 import type { Request, Response, NextFunction } from "express";
 
+declare module "express-session" {
+  interface SessionData {
+    userId: number;
+  }
+}
+
 export const requireAuth = (req: Request, res: Response, next: NextFunction): void => {
-  const auth = getAuth(req);
-  const userId = auth?.userId;
+  const userId = req.session?.userId;
   if (!userId) {
     res.status(401).json({ error: "Unauthorized" });
     return;
@@ -12,6 +16,6 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction): vo
   next();
 };
 
-export const getUserId = (req: Request): string => {
-  return (req as any).userId as string;
+export const getUserId = (req: Request): number => {
+  return (req as any).userId as number;
 };

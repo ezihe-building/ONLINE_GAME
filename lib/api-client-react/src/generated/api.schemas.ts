@@ -13,8 +13,25 @@ export interface ErrorEnvelope {
   error: string;
 }
 
+export interface RegisterInput {
+  email: string;
+  /** @minLength 6 */
+  password: string;
+  /**
+     * @minLength 2
+     * @maxLength 30
+     */
+  username: string;
+}
+
+export interface LoginInput {
+  email: string;
+  password: string;
+}
+
 export interface UserProfile {
-  clerkId: string;
+  id: number;
+  email: string;
   username: string;
   /** @nullable */
   avatarPath?: string | null;
@@ -52,9 +69,9 @@ export interface Room {
   id: number;
   code: string;
   status: RoomStatus;
-  creatorClerkId: string;
+  creatorUserId: number;
   /** @nullable */
-  guestClerkId?: string | null;
+  guestUserId?: number | null;
   creatorProfile?: UserProfile;
   guestProfile?: UserProfile;
   createdAt: string;
@@ -85,11 +102,11 @@ export interface GameSession {
   id: number;
   roomId: number;
   gameType: string;
-  playerXClerkId: string;
-  playerOClerkId: string;
-  currentTurnClerkId: string;
+  playerXUserId: number;
+  playerOUserId: number;
+  currentTurnUserId: number;
   /** @nullable */
-  winnerClerkId?: string | null;
+  winnerUserId?: number | null;
   isDraw?: boolean;
   status: GameSessionStatus;
   /** Game-specific board/state as JSON */
@@ -122,7 +139,7 @@ export type GameMoveMoveData = { [key: string]: unknown };
 export interface GameMove {
   id: number;
   gameId: number;
-  playerClerkId: string;
+  playerUserId: number;
   moveData: GameMoveMoveData;
   createdAt: string;
 }
@@ -136,8 +153,8 @@ export interface MoveInput {
 export interface FlirtMessage {
   id: number;
   gameId: number;
-  fromClerkId: string;
-  toClerkId: string;
+  fromUserId: number;
+  toUserId: number;
   message: string;
   createdAt: string;
   fromProfile?: UserProfile;
@@ -164,6 +181,9 @@ export interface UploadUrlRequest {
 export interface UploadUrlResponse {
   uploadURL: string;
   objectPath: string;
-  metadata?: UploadUrlRequest;
 }
+
+export type Logout200 = {
+  ok?: boolean;
+};
 

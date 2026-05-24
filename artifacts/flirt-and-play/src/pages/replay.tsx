@@ -20,52 +20,24 @@ export default function Replay() {
 
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [replayState, setReplayState] = useState<any>({});
 
-  // Reset state to initial when game loads
   useEffect(() => {
     if (game) {
-      // Basic initial state depending on game type
-      let initialState = {};
-      if (game.gameType === 'tic-tac-toe') initialState = { board: Array(9).fill(null) };
-      if (game.gameType === 'connect-four') initialState = { board: Array(6).fill(Array(7).fill(null)) };
-      
-      setReplayState(initialState);
       setCurrentMoveIndex(0);
     }
   }, [game]);
 
-  // Handle playback
   useEffect(() => {
     if (!isPlaying || !moves) return;
-
     if (currentMoveIndex >= moves.length) {
       setIsPlaying(false);
       return;
     }
-
     const timer = setTimeout(() => {
-      handleNextMove();
+      setCurrentMoveIndex(prev => prev + 1);
     }, 1000);
-
     return () => clearTimeout(timer);
   }, [isPlaying, currentMoveIndex, moves]);
-
-  const handleNextMove = () => {
-    if (!moves || currentMoveIndex >= moves.length) return;
-    
-    // In a real robust implementation, we would apply the move to replayState
-    // For simplicity, we just use the game component's visualization capabilities
-    // and rely on a patched game object
-    
-    setCurrentMoveIndex(prev => prev + 1);
-  };
-
-  const handlePrevMove = () => {
-    if (currentMoveIndex > 0) {
-      setCurrentMoveIndex(prev => prev - 1);
-    }
-  };
 
   if (isLoadingGame || isLoadingMoves) {
     return <div className="min-h-[100dvh] flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -74,13 +46,6 @@ export default function Replay() {
   if (!game || !moves || !profile) {
     return <div className="min-h-[100dvh] flex items-center justify-center bg-background text-foreground">Data not found</div>;
   }
-
-  // Build a "mock" game state up to the current move for visualization
-  // This is a simplified approach. In a real app we'd need a reducer for each game type.
-  // We'll pass the full game and let the components render statically if possible,
-  // or we pass a constructed state. Since we can't easily recreate state, 
-  // we might just show a message or a simplified view. 
-  // For the prompt's sake, we'll render the final game state but with controls.
 
   return (
     <div className="min-h-[100dvh] bg-background text-foreground flex flex-col">
@@ -94,12 +59,11 @@ export default function Replay() {
       <main className="flex-1 max-w-5xl mx-auto w-full p-4 flex flex-col items-center justify-center relative">
         
         <div className="w-full flex justify-center items-center mb-8 opacity-80 pointer-events-none">
-           {/* Rendering final state as replay is complex without reducers, so we show the final board and a move list */}
-           {game.gameType === 'tic-tac-toe' && <TicTacToe game={game} onMove={()=>{}} isMyTurn={false} isSpectator={true} />}
-           {game.gameType === 'connect-four' && <ConnectFour game={game} onMove={()=>{}} isMyTurn={false} isSpectator={true} />}
-           {game.gameType === 'rock-paper-scissors' && <RockPaperScissors game={game} onMove={()=>{}} isMyTurn={false} isSpectator={true} profileId={profile.clerkId} />}
-           {game.gameType === 'word-duel' && <WordDuel game={game} onMove={()=>{}} isMyTurn={false} isSpectator={true} profileId={profile.clerkId} />}
-           {game.gameType === 'truth-spinner' && <TruthSpinner game={game} onMove={()=>{}} isMyTurn={false} isSpectator={true} profileId={profile.clerkId} />}
+          {game.gameType === 'tic-tac-toe' && <TicTacToe game={game} onMove={()=>{}} isMyTurn={false} isSpectator={true} />}
+          {game.gameType === 'connect-four' && <ConnectFour game={game} onMove={()=>{}} isMyTurn={false} isSpectator={true} />}
+          {game.gameType === 'rock-paper-scissors' && <RockPaperScissors game={game} onMove={()=>{}} isMyTurn={false} isSpectator={true} profileId={profile.id} />}
+          {game.gameType === 'word-duel' && <WordDuel game={game} onMove={()=>{}} isMyTurn={false} isSpectator={true} profileId={profile.id} />}
+          {game.gameType === 'truth-spinner' && <TruthSpinner game={game} onMove={()=>{}} isMyTurn={false} isSpectator={true} profileId={profile.id} />}
         </div>
 
         <div className="bg-card border border-border p-4 rounded-xl w-full max-w-md flex flex-col gap-4 shadow-xl">
@@ -109,13 +73,13 @@ export default function Replay() {
               <Button variant="outline" size="icon" onClick={() => setCurrentMoveIndex(0)} disabled={currentMoveIndex === 0}>
                 <SkipBack className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="icon" onClick={handlePrevMove} disabled={currentMoveIndex === 0}>
+              <Button variant="outline" size="icon" onClick={() => setCurrentMoveIndex(p => Math.max(0, p - 1))} disabled={currentMoveIndex === 0}>
                 <Play className="h-4 w-4 rotate-180" />
               </Button>
               <Button variant="default" size="icon" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setIsPlaying(!isPlaying)}>
                 {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
               </Button>
-              <Button variant="outline" size="icon" onClick={handleNextMove} disabled={currentMoveIndex === moves.length}>
+              <Button variant="outline" size="icon" onClick={() => setCurrentMoveIndex(p => Math.min(moves.length, p + 1))} disabled={currentMoveIndex === moves.length}>
                 <Play className="h-4 w-4" />
               </Button>
               <Button variant="outline" size="icon" onClick={() => setCurrentMoveIndex(moves.length)} disabled={currentMoveIndex === moves.length}>
@@ -131,9 +95,11 @@ export default function Replay() {
           </div>
           
           <div className="mt-4 max-h-40 overflow-y-auto space-y-2 text-sm">
-            {moves.slice(0, currentMoveIndex).map((move, i) => (
+            {moves.slice(0, currentMoveIndex).map((move) => (
               <div key={move.id} className="p-2 rounded bg-muted/50 border border-border/50">
-                <span className="font-medium">{move.playerClerkId === game.playerXClerkId ? game.playerXProfile?.username : game.playerOProfile?.username}:</span> 
+                <span className="font-medium">
+                  {move.playerUserId === game.playerXUserId ? game.playerXProfile?.username : game.playerOProfile?.username}:
+                </span>
                 <span className="ml-2 font-mono text-muted-foreground">{JSON.stringify(move.moveData)}</span>
               </div>
             ))}

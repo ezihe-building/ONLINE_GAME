@@ -8,13 +8,13 @@ interface Props {
   onMove: (data: any) => void;
   isMyTurn: boolean;
   isSpectator: boolean;
-  profileId: string;
+  profileId: number;
 }
 
 export default function WordDuel({ game, onMove, isMyTurn, isSpectator, profileId }: Props) {
   const [word, setWord] = useState("");
   
-  const isX = game.playerXClerkId === profileId;
+  const isX = game.playerXUserId === profileId;
   const state = game.state as Record<string, unknown>;
   
   // State might contain: { phase: "setting" | "guessing", p1WordSet, p2WordSet, p1Guesses: [], p2Guesses: [] }

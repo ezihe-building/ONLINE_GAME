@@ -6,9 +6,11 @@ import { GetFlirtMessageParams, SendFlirtMessageParams, SendFlirtMessageBody } f
 
 const router: IRouter = Router();
 
-async function getProfile(clerkId: string) {
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.clerkId, clerkId));
-  return user ?? undefined;
+async function getProfile(userId: number) {
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+  if (!user) return undefined;
+  const { passwordHash: _ph, ...safe } = user;
+  return safe ?? undefined;
 }
 
 router.get("/games/:gameId/flirt", requireAuth, async (req, res): Promise<void> => {
@@ -26,8 +28,8 @@ router.get("/games/:gameId/flirt", requireAuth, async (req, res): Promise<void> 
     return;
   }
   const [fromProfile, toProfile] = await Promise.all([
-    getProfile(msg.fromClerkId),
-    getProfile(msg.toClerkId),
+    getProfile(msg.fromUserId),
+    getProfile(msg.toUserId),
   ]);
   res.json({ ...msg, fromProfile, toProfile });
 });
@@ -43,7 +45,7 @@ router.post("/games/:gameId/flirt", requireAuth, async (req, res): Promise<void>
     res.status(400).json({ error: body.error.message });
     return;
   }
-  const clerkId = getUserId(req);
+  const userId = getUserId(req);
   const [session] = await db
     .select()
     .from(gameSessionsTable)
@@ -57,16 +59,16 @@ router.post("/games/:gameId/flirt", requireAuth, async (req, res): Promise<void>
     res.status(400).json({ error: "Game is not finished yet" });
     return;
   }
-  if (!session.winnerClerkId) {
+  if (!session.winnerUserId) {
     res.status(400).json({ error: "No winner in this game" });
     return;
   }
-  if (clerkId === session.winnerClerkId) {
+  if (userId === session.winnerUserId) {
     res.status(400).json({ error: "Only the loser can send the flirt message" });
     return;
   }
 
-  const toClerkId = session.winnerClerkId;
+  const toUserId = session.winnerUserId;
   const [existing] = await db
     .select()
     .from(flirtMessagesTable)
@@ -80,8 +82,8 @@ router.post("/games/:gameId/flirt", requireAuth, async (req, res): Promise<void>
     .insert(flirtMessagesTable)
     .values({
       gameId: params.data.gameId,
-      fromClerkId: clerkId,
-      toClerkId,
+      fromUserId: userId,
+      toUserId,
       message: body.data.message,
     })
     .returning();
@@ -92,8 +94,8 @@ router.post("/games/:gameId/flirt", requireAuth, async (req, res): Promise<void>
     .where(eq(gameSessionsTable.id, params.data.gameId));
 
   const [fromProfile, toProfile] = await Promise.all([
-    getProfile(msg.fromClerkId),
-    getProfile(msg.toClerkId),
+    getProfile(msg.fromUserId),
+    getProfile(msg.toUserId),
   ]);
   res.status(201).json({ ...msg, fromProfile, toProfile });
 });

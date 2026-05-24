@@ -6,7 +6,7 @@ interface Props {
   onMove: (data: any) => void;
   isMyTurn: boolean;
   isSpectator: boolean;
-  profileId: string;
+  profileId: number;
 }
 
 export default function RockPaperScissors({ game, onMove, isMyTurn, isSpectator, profileId }: Props) {
@@ -17,7 +17,7 @@ export default function RockPaperScissors({ game, onMove, isMyTurn, isSpectator,
   ];
 
   // state = { p1Choice, p2Choice } (might be masked if not both chosen)
-  const isX = game.playerXClerkId === profileId;
+  const isX = game.playerXUserId === profileId;
   const state = game.state as Record<string, unknown>;
   const myChoice = isX ? (state?.p1Choice as string) : (state?.p2Choice as string);
   const theirChoice = isX ? (state?.p2Choice as string) : (state?.p1Choice as string);

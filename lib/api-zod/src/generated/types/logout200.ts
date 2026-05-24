@@ -6,7 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface UploadUrlResponse {
-  uploadURL: string;
-  objectPath: string;
-}
+export type Logout200 = {
+  ok?: boolean;
+};

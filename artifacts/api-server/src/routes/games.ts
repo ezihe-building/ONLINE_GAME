@@ -61,16 +61,18 @@ const GAME_TYPES = [
   },
 ];
 
-async function getProfile(clerkId: string | null | undefined) {
-  if (!clerkId) return undefined;
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.clerkId, clerkId));
-  return user ?? undefined;
+async function getProfile(userId: number | null | undefined) {
+  if (!userId) return undefined;
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+  if (!user) return undefined;
+  const { passwordHash: _ph, ...safe } = user;
+  return safe ?? undefined;
 }
 
 async function enrichSession(session: typeof gameSessionsTable.$inferSelect) {
   const [xProfile, oProfile] = await Promise.all([
-    getProfile(session.playerXClerkId),
-    getProfile(session.playerOClerkId),
+    getProfile(session.playerXUserId),
+    getProfile(session.playerOUserId),
   ]);
   return { ...session, playerXProfile: xProfile, playerOProfile: oProfile };
 }
@@ -105,13 +107,13 @@ router.post("/rooms/:roomId/games", requireAuth, async (req, res): Promise<void>
     res.status(400).json({ error: body.error.message });
     return;
   }
-  const clerkId = getUserId(req);
+  const userId = getUserId(req);
   const [room] = await db.select().from(roomsTable).where(eq(roomsTable.id, params.data.roomId));
-  if (!room || !room.guestClerkId) {
+  if (!room || !room.guestUserId) {
     res.status(400).json({ error: "Room needs two players to start a game" });
     return;
   }
-  if (room.creatorClerkId !== clerkId && room.guestClerkId !== clerkId) {
+  if (room.creatorUserId !== userId && room.guestUserId !== userId) {
     res.status(403).json({ error: "Not a member of this room" });
     return;
   }
@@ -124,17 +126,17 @@ router.post("/rooms/:roomId/games", requireAuth, async (req, res): Promise<void>
   }
 
   const initialState = initGameState(gameType);
-  const playerXClerkId = room.creatorClerkId;
-  const playerOClerkId = room.guestClerkId;
+  const playerXUserId = room.creatorUserId;
+  const playerOUserId = room.guestUserId;
 
   const [session] = await db
     .insert(gameSessionsTable)
     .values({
       roomId: params.data.roomId,
       gameType,
-      playerXClerkId,
-      playerOClerkId,
-      currentTurnClerkId: playerXClerkId,
+      playerXUserId,
+      playerOUserId,
+      currentTurnUserId: playerXUserId,
       status: "active",
       state: initialState,
     })
@@ -209,7 +211,7 @@ router.post("/games/:gameId/moves", requireAuth, async (req, res): Promise<void>
     res.status(400).json({ error: body.error.message });
     return;
   }
-  const clerkId = getUserId(req);
+  const userId = getUserId(req);
   const [session] = await db
     .select()
     .from(gameSessionsTable)
@@ -219,7 +221,7 @@ router.post("/games/:gameId/moves", requireAuth, async (req, res): Promise<void>
     res.status(404).json({ error: "Game not found" });
     return;
   }
-  if (session.playerXClerkId !== clerkId && session.playerOClerkId !== clerkId) {
+  if (session.playerXUserId !== userId && session.playerOUserId !== userId) {
     res.status(403).json({ error: "Not a player in this game" });
     return;
   }
@@ -227,12 +229,12 @@ router.post("/games/:gameId/moves", requireAuth, async (req, res): Promise<void>
     res.status(400).json({ error: "Game is already finished" });
     return;
   }
-  if (session.currentTurnClerkId !== clerkId) {
+  if (session.currentTurnUserId !== userId) {
     res.status(400).json({ error: "Not your turn" });
     return;
   }
 
-  const playerRole: "x" | "o" = session.playerXClerkId === clerkId ? "x" : "o";
+  const playerRole: "x" | "o" = session.playerXUserId === userId ? "x" : "o";
   const moveData = body.data.moveData as Record<string, unknown>;
 
   const { newState, winner, isDraw } = applyMove(
@@ -244,16 +246,16 @@ router.post("/games/:gameId/moves", requireAuth, async (req, res): Promise<void>
 
   await db.insert(gameMovesTable).values({
     gameId: session.id,
-    playerClerkId: clerkId,
+    playerUserId: userId,
     moveData,
   });
 
   const nextTurn =
-    session.playerXClerkId === clerkId ? session.playerOClerkId : session.playerXClerkId;
+    session.playerXUserId === userId ? session.playerOUserId : session.playerXUserId;
 
   const updates: Partial<typeof gameSessionsTable.$inferInsert> = {
     state: newState,
-    currentTurnClerkId: nextTurn,
+    currentTurnUserId: nextTurn,
   };
 
   if (winner || isDraw) {
@@ -261,8 +263,8 @@ router.post("/games/:gameId/moves", requireAuth, async (req, res): Promise<void>
     updates.finishedAt = new Date();
     updates.isDraw = isDraw;
     if (winner) {
-      updates.winnerClerkId =
-        winner === "x" ? session.playerXClerkId : session.playerOClerkId;
+      updates.winnerUserId =
+        winner === "x" ? session.playerXUserId : session.playerOUserId;
     }
   }
 
@@ -301,9 +303,9 @@ router.post("/games/:gameId/rematch", requireAuth, async (req, res): Promise<voi
     .values({
       roomId: session.roomId,
       gameType: session.gameType,
-      playerXClerkId: session.playerOClerkId,
-      playerOClerkId: session.playerXClerkId,
-      currentTurnClerkId: session.playerOClerkId,
+      playerXUserId: session.playerOUserId,
+      playerOUserId: session.playerXUserId,
+      currentTurnUserId: session.playerOUserId,
       status: "active",
       state: initialState,
     })

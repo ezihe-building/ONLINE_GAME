@@ -9,7 +9,7 @@ interface Props {
   onMove: (data: any) => void;
   isMyTurn: boolean;
   isSpectator: boolean;
-  profileId: string;
+  profileId: number;
 }
 
 export default function TruthSpinner({ game, onMove, isMyTurn, isSpectator, profileId }: Props) {

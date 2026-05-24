@@ -15,7 +15,6 @@ export default function Room() {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
 
-  // Poll room to see if guest joined
   const { data: room, isLoading: isLoadingRoom } = useGetRoom(id, {
     query: {
       queryKey: [],
@@ -27,7 +26,6 @@ export default function Room() {
   const { data: profile } = useGetMe();
   const { data: gameTypes } = useListGameTypes();
   
-  // Poll games to see if opponent started a game
   const { data: games } = useListRoomGames(id, {
     query: {
       queryKey: [],
@@ -38,7 +36,6 @@ export default function Room() {
 
   const createGame = useCreateGame();
 
-  // Redirect to active game if one exists
   useEffect(() => {
     if (games && games.length > 0) {
       const activeGame = games.find(g => g.status === 'active');
@@ -76,11 +73,9 @@ export default function Room() {
     return <div className="min-h-[100dvh] flex items-center justify-center bg-background text-foreground">Room not found</div>;
   }
 
-  const isCreator = room.creatorClerkId === profile?.clerkId;
-  const isGuest = room.guestClerkId === profile?.clerkId;
+  const isCreator = room.creatorUserId === profile?.id;
   const opponent = isCreator ? room.guestProfile : room.creatorProfile;
   const me = isCreator ? room.creatorProfile : room.guestProfile;
-  
   const isWaiting = room.status === 'waiting';
 
   return (
@@ -96,9 +91,7 @@ export default function Room() {
 
       <main className="flex-1 max-w-4xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex flex-col gap-8 items-center pt-12">
         
-        {/* Players Area */}
         <div className="flex items-center justify-center w-full max-w-2xl gap-4 sm:gap-12 mb-8">
-          {/* Me */}
           <div className="flex flex-col items-center gap-3">
             <div className="relative">
               <Avatar className="h-20 w-20 sm:h-24 sm:w-24 border-4 border-primary shadow-[0_0_20px_-5px_rgba(236,72,153,0.5)]">
@@ -112,7 +105,6 @@ export default function Room() {
 
           <div className="text-2xl font-black text-muted-foreground italic tracking-widest px-4">VS</div>
 
-          {/* Opponent */}
           <div className="flex flex-col items-center gap-3">
             {isWaiting ? (
               <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full border-4 border-dashed border-muted bg-card flex items-center justify-center animate-pulse">
@@ -171,7 +163,7 @@ export default function Room() {
               ))}
             </div>
             
-            {games && games.length > 0 && (
+            {games && games.filter(g => g.status === 'finished').length > 0 && (
               <div className="mt-12">
                 <h3 className="text-xl font-display font-bold mb-4 text-muted-foreground">Previous Matches</h3>
                 <div className="flex flex-col gap-2">
@@ -180,7 +172,7 @@ export default function Room() {
                       <div>
                         <span className="font-medium text-foreground">{gameTypes?.find(t => t.key === game.gameType)?.name || game.gameType}</span>
                         <span className="text-sm text-muted-foreground ml-2">
-                          {game.isDraw ? 'Draw' : game.winnerClerkId === profile?.clerkId ? 'You won' : 'You lost'}
+                          {game.isDraw ? 'Draw' : game.winnerUserId === profile?.id ? 'You won' : 'You lost'}
                         </span>
                       </div>
                       <Link href={`/rooms/${id}/games/${game.id}`}>

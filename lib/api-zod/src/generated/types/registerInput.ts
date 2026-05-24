@@ -6,11 +6,13 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface UserProfile {
-  id: number;
+export interface RegisterInput {
   email: string;
+  /** @minLength 6 */
+  password: string;
+  /**
+     * @minLength 2
+     * @maxLength 30
+     */
   username: string;
-  /** @nullable */
-  avatarPath?: string | null;
-  createdAt: Date;
 }

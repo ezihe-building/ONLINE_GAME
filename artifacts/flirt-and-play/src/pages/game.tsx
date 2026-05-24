@@ -38,9 +38,9 @@ export default function Game() {
     return <div className="min-h-[100dvh] flex items-center justify-center bg-background text-foreground">Game not found</div>;
   }
 
-  const isPlayerX = game.playerXClerkId === profile.clerkId;
-  const isPlayerO = game.playerOClerkId === profile.clerkId;
-  const isMyTurn = game.currentTurnClerkId === profile.clerkId && game.status === 'active';
+  const isPlayerX = game.playerXUserId === profile.id;
+  const isPlayerO = game.playerOUserId === profile.id;
+  const isMyTurn = game.currentTurnUserId === profile.id && game.status === 'active';
   const isSpectator = !isPlayerX && !isPlayerO;
 
   const opponent = isPlayerX ? game.playerOProfile : game.playerXProfile;
@@ -92,9 +92,9 @@ export default function Game() {
             <div className="w-full flex justify-center items-center">
               {game.gameType === 'tic-tac-toe' && <TicTacToe game={game} onMove={handleMove} isMyTurn={isMyTurn} isSpectator={isSpectator} />}
               {game.gameType === 'connect-four' && <ConnectFour game={game} onMove={handleMove} isMyTurn={isMyTurn} isSpectator={isSpectator} />}
-              {game.gameType === 'rock-paper-scissors' && <RockPaperScissors game={game} onMove={handleMove} isMyTurn={isMyTurn} isSpectator={isSpectator} profileId={profile.clerkId} />}
-              {game.gameType === 'word-duel' && <WordDuel game={game} onMove={handleMove} isMyTurn={isMyTurn} isSpectator={isSpectator} profileId={profile.clerkId} />}
-              {game.gameType === 'truth-spinner' && <TruthSpinner game={game} onMove={handleMove} isMyTurn={isMyTurn} isSpectator={isSpectator} profileId={profile.clerkId} />}
+              {game.gameType === 'rock-paper-scissors' && <RockPaperScissors game={game} onMove={handleMove} isMyTurn={isMyTurn} isSpectator={isSpectator} profileId={profile.id} />}
+              {game.gameType === 'word-duel' && <WordDuel game={game} onMove={handleMove} isMyTurn={isMyTurn} isSpectator={isSpectator} profileId={profile.id} />}
+              {game.gameType === 'truth-spinner' && <TruthSpinner game={game} onMove={handleMove} isMyTurn={isMyTurn} isSpectator={isSpectator} profileId={profile.id} />}
             </div>
           </>
         )}

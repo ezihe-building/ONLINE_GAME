@@ -10,7 +10,7 @@ import type { GameMoveMoveData } from './gameMoveMoveData';
 export interface GameMove {
   id: number;
   gameId: number;
-  playerClerkId: string;
+  playerUserId: number;
   moveData: GameMoveMoveData;
   createdAt: Date;
 }

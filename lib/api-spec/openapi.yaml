@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
   - name: users
     description: User profile operations
   - name: rooms
@@ -35,6 +37,88 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── Auth ──────────────────────────────────────────────────────────────────
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Account created and signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "400":
+          description: Validation error or email already taken
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Sign in with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Signed in successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Sign out current session
+      responses:
+        "200":
+          description: Signed out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+
+  /auth/me:
+    get:
+      operationId: getAuthMe
+      tags: [auth]
+      summary: Get the currently signed-in user (null if not signed in)
+      responses:
+        "200":
+          description: Current user or null
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/UserProfile"
+                  - type: "null"
 
   # ── Users ────────────────────────────────────────────────────────────────
   /users/me:
@@ -555,12 +639,40 @@ components:
         error:
           type: string
 
+    # ── Auth ──────────────────────────────────────────────────────────────
+    RegisterInput:
+      type: object
+      required: [email, password, username]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+        username:
+          type: string
+          minLength: 2
+          maxLength: 30
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
     # ── User ──────────────────────────────────────────────────────────────
     UserProfile:
       type: object
-      required: [clerkId, username, createdAt]
+      required: [id, email, username, createdAt]
       properties:
-        clerkId:
+        id:
+          type: integer
+        email:
           type: string
         username:
           type: string
@@ -598,7 +710,7 @@ components:
     # ── Room ──────────────────────────────────────────────────────────────
     Room:
       type: object
-      required: [id, code, status, creatorClerkId, createdAt]
+      required: [id, code, status, creatorUserId, createdAt]
       properties:
         id:
           type: integer
@@ -607,10 +719,10 @@ components:
         status:
           type: string
           enum: [waiting, active, finished]
-        creatorClerkId:
-          type: string
-        guestClerkId:
-          type: ["string", "null"]
+        creatorUserId:
+          type: integer
+        guestUserId:
+          type: ["integer", "null"]
         creatorProfile:
           $ref: "#/components/schemas/UserProfile"
         guestProfile:
@@ -638,7 +750,7 @@ components:
     # ── Game Session ──────────────────────────────────────────────────────
     GameSession:
       type: object
-      required: [id, roomId, gameType, playerXClerkId, playerOClerkId, currentTurnClerkId, status, state, createdAt]
+      required: [id, roomId, gameType, playerXUserId, playerOUserId, currentTurnUserId, status, state, createdAt]
       properties:
         id:
           type: integer
@@ -646,14 +758,14 @@ components:
           type: integer
         gameType:
           type: string
-        playerXClerkId:
-          type: string
-        playerOClerkId:
-          type: string
-        currentTurnClerkId:
-          type: string
-        winnerClerkId:
-          type: ["string", "null"]
+        playerXUserId:
+          type: integer
+        playerOUserId:
+          type: integer
+        currentTurnUserId:
+          type: integer
+        winnerUserId:
+          type: ["integer", "null"]
         isDraw:
           type: boolean
         status:
@@ -687,14 +799,14 @@ components:
     # ── Move ──────────────────────────────────────────────────────────────
     GameMove:
       type: object
-      required: [id, gameId, playerClerkId, moveData, createdAt]
+      required: [id, gameId, playerUserId, moveData, createdAt]
       properties:
         id:
           type: integer
         gameId:
           type: integer
-        playerClerkId:
-          type: string
+        playerUserId:
+          type: integer
         moveData:
           type: object
           additionalProperties: true
@@ -713,16 +825,16 @@ components:
     # ── Flirt ─────────────────────────────────────────────────────────────
     FlirtMessage:
       type: object
-      required: [id, gameId, fromClerkId, toClerkId, message, createdAt]
+      required: [id, gameId, fromUserId, toUserId, message, createdAt]
       properties:
         id:
           type: integer
         gameId:
           type: integer
-        fromClerkId:
-          type: string
-        toClerkId:
-          type: string
+        fromUserId:
+          type: integer
+        toUserId:
+          type: integer
         message:
           type: string
         createdAt:
@@ -766,5 +878,3 @@ components:
           format: uri
         objectPath:
           type: string
-        metadata:
-          $ref: '#/components/schemas/UploadUrlRequest'

@@ -18,10 +18,65 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
+ * @summary Register a new account
+ */
+export const registerBodyPasswordMin = 6;
+
+export const registerBodyUsernameMin = 2;
+export const registerBodyUsernameMax = 30;
+
+
+
+export const RegisterBody = zod.object({
+  "email": zod.string().email(),
+  "password": zod.string().min(registerBodyPasswordMin),
+  "username": zod.string().min(registerBodyUsernameMin).max(registerBodyUsernameMax)
+})
+
+
+/**
+ * @summary Sign in with email and password
+ */
+export const LoginBody = zod.object({
+  "email": zod.string().email(),
+  "password": zod.string()
+})
+
+export const LoginResponse = zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "username": zod.string(),
+  "avatarPath": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Sign out current session
+ */
+export const LogoutResponse = zod.object({
+  "ok": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Get the currently signed-in user (null if not signed in)
+ */
+export const GetAuthMeResponse = zod.union([zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "username": zod.string(),
+  "avatarPath": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+}),zod.null()])
+
+
+/**
  * @summary Get current user profile
  */
 export const GetMeResponse = zod.object({
-  "clerkId": zod.string(),
+  "id": zod.number(),
+  "email": zod.string(),
   "username": zod.string(),
   "avatarPath": zod.string().nullish(),
   "createdAt": zod.coerce.date()
@@ -42,7 +97,8 @@ export const UpdateMeBody = zod.object({
 })
 
 export const UpdateMeResponse = zod.object({
-  "clerkId": zod.string(),
+  "id": zod.number(),
+  "email": zod.string(),
   "username": zod.string(),
   "avatarPath": zod.string().nullish(),
   "createdAt": zod.coerce.date()
@@ -68,16 +124,18 @@ export const ListMyRoomsResponseItem = zod.object({
   "id": zod.number(),
   "code": zod.string(),
   "status": zod.enum(['waiting', 'active', 'finished']),
-  "creatorClerkId": zod.string(),
-  "guestClerkId": zod.string().nullish(),
+  "creatorUserId": zod.number(),
+  "guestUserId": zod.number().nullish(),
   "creatorProfile": zod.object({
-  "clerkId": zod.string(),
+  "id": zod.number(),
+  "email": zod.string(),
   "username": zod.string(),
   "avatarPath": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 }).optional(),
   "guestProfile": zod.object({
-  "clerkId": zod.string(),
+  "id": zod.number(),
+  "email": zod.string(),
   "username": zod.string(),
   "avatarPath": zod.string().nullish(),
   "createdAt": zod.coerce.date()
@@ -98,16 +156,18 @@ export const GetRoomByCodeResponse = zod.object({
   "id": zod.number(),
   "code": zod.string(),
   "status": zod.enum(['waiting', 'active', 'finished']),
-  "creatorClerkId": zod.string(),
-  "guestClerkId": zod.string().nullish(),
+  "creatorUserId": zod.number(),
+  "guestUserId": zod.number().nullish(),
   "creatorProfile": zod.object({
-  "clerkId": zod.string(),
+  "id": zod.number(),
+  "email": zod.string(),
   "username": zod.string(),
   "avatarPath": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 }).optional(),
   "guestProfile": zod.object({
-  "clerkId": zod.string(),
+  "id": zod.number(),
+  "email": zod.string(),
   "username": zod.string(),
   "avatarPath": zod.string().nullish(),
   "createdAt": zod.coerce.date()
@@ -127,16 +187,18 @@ export const GetRoomResponse = zod.object({
   "id": zod.number(),
   "code": zod.string(),
   "status": zod.enum(['waiting', 'active', 'finished']),
-  "creatorClerkId": zod.string(),
-  "guestClerkId": zod.string().nullish(),
+  "creatorUserId": zod.number(),
+  "guestUserId": zod.number().nullish(),
   "creatorProfile": zod.object({
-  "clerkId": zod.string(),
+  "id": zod.number(),
+  "email": zod.string(),
   "username": zod.string(),
   "avatarPath": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 }).optional(),
   "guestProfile": zod.object({
-  "clerkId": zod.string(),
+  "id": zod.number(),
+  "email": zod.string(),
   "username": zod.string(),
   "avatarPath": zod.string().nullish(),
   "createdAt": zod.coerce.date()
@@ -156,16 +218,18 @@ export const JoinRoomResponse = zod.object({
   "id": zod.number(),
   "code": zod.string(),
   "status": zod.enum(['waiting', 'active', 'finished']),
-  "creatorClerkId": zod.string(),
-  "guestClerkId": zod.string().nullish(),
+  "creatorUserId": zod.number(),
+  "guestUserId": zod.number().nullish(),
   "creatorProfile": zod.object({
-  "clerkId": zod.string(),
+  "id": zod.number(),
+  "email": zod.string(),
   "username": zod.string(),
   "avatarPath": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 }).optional(),
   "guestProfile": zod.object({
-  "clerkId": zod.string(),
+  "id": zod.number(),
+  "email": zod.string(),
   "username": zod.string(),
   "avatarPath": zod.string().nullish(),
   "createdAt": zod.coerce.date()
@@ -198,23 +262,25 @@ export const ListRoomGamesResponseItem = zod.object({
   "id": zod.number(),
   "roomId": zod.number(),
   "gameType": zod.string(),
-  "playerXClerkId": zod.string(),
-  "playerOClerkId": zod.string(),
-  "currentTurnClerkId": zod.string(),
-  "winnerClerkId": zod.string().nullish(),
+  "playerXUserId": zod.number(),
+  "playerOUserId": zod.number(),
+  "currentTurnUserId": zod.number(),
+  "winnerUserId": zod.number().nullish(),
   "isDraw": zod.boolean().optional(),
   "status": zod.enum(['active', 'finished']),
   "state": zod.record(zod.string(), zod.unknown()).describe('Game-specific board\/state as JSON'),
   "createdAt": zod.coerce.date(),
   "finishedAt": zod.coerce.date().nullish(),
   "playerXProfile": zod.object({
-  "clerkId": zod.string(),
+  "id": zod.number(),
+  "email": zod.string(),
   "username": zod.string(),
   "avatarPath": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 }).optional(),
   "playerOProfile": zod.object({
-  "clerkId": zod.string(),
+  "id": zod.number(),
+  "email": zod.string(),
   "username": zod.string(),
   "avatarPath": zod.string().nullish(),
   "createdAt": zod.coerce.date()
@@ -247,23 +313,25 @@ export const GetCurrentGameResponse = zod.object({
   "id": zod.number(),
   "roomId": zod.number(),
   "gameType": zod.string(),
-  "playerXClerkId": zod.string(),
-  "playerOClerkId": zod.string(),
-  "currentTurnClerkId": zod.string(),
-  "winnerClerkId": zod.string().nullish(),
+  "playerXUserId": zod.number(),
+  "playerOUserId": zod.number(),
+  "currentTurnUserId": zod.number(),
+  "winnerUserId": zod.number().nullish(),
   "isDraw": zod.boolean().optional(),
   "status": zod.enum(['active', 'finished']),
   "state": zod.record(zod.string(), zod.unknown()).describe('Game-specific board\/state as JSON'),
   "createdAt": zod.coerce.date(),
   "finishedAt": zod.coerce.date().nullish(),
   "playerXProfile": zod.object({
-  "clerkId": zod.string(),
+  "id": zod.number(),
+  "email": zod.string(),
   "username": zod.string(),
   "avatarPath": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 }).optional(),
   "playerOProfile": zod.object({
-  "clerkId": zod.string(),
+  "id": zod.number(),
+  "email": zod.string(),
   "username": zod.string(),
   "avatarPath": zod.string().nullish(),
   "createdAt": zod.coerce.date()
@@ -283,23 +351,25 @@ export const GetGameResponse = zod.object({
   "id": zod.number(),
   "roomId": zod.number(),
   "gameType": zod.string(),
-  "playerXClerkId": zod.string(),
-  "playerOClerkId": zod.string(),
-  "currentTurnClerkId": zod.string(),
-  "winnerClerkId": zod.string().nullish(),
+  "playerXUserId": zod.number(),
+  "playerOUserId": zod.number(),
+  "currentTurnUserId": zod.number(),
+  "winnerUserId": zod.number().nullish(),
   "isDraw": zod.boolean().optional(),
   "status": zod.enum(['active', 'finished']),
   "state": zod.record(zod.string(), zod.unknown()).describe('Game-specific board\/state as JSON'),
   "createdAt": zod.coerce.date(),
   "finishedAt": zod.coerce.date().nullish(),
   "playerXProfile": zod.object({
-  "clerkId": zod.string(),
+  "id": zod.number(),
+  "email": zod.string(),
   "username": zod.string(),
   "avatarPath": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 }).optional(),
   "playerOProfile": zod.object({
-  "clerkId": zod.string(),
+  "id": zod.number(),
+  "email": zod.string(),
   "username": zod.string(),
   "avatarPath": zod.string().nullish(),
   "createdAt": zod.coerce.date()
@@ -318,7 +388,7 @@ export const ListMovesParams = zod.object({
 export const ListMovesResponseItem = zod.object({
   "id": zod.number(),
   "gameId": zod.number(),
-  "playerClerkId": zod.string(),
+  "playerUserId": zod.number(),
   "moveData": zod.record(zod.string(), zod.unknown()),
   "createdAt": zod.coerce.date()
 })
@@ -340,23 +410,25 @@ export const MakeMoveResponse = zod.object({
   "id": zod.number(),
   "roomId": zod.number(),
   "gameType": zod.string(),
-  "playerXClerkId": zod.string(),
-  "playerOClerkId": zod.string(),
-  "currentTurnClerkId": zod.string(),
-  "winnerClerkId": zod.string().nullish(),
+  "playerXUserId": zod.number(),
+  "playerOUserId": zod.number(),
+  "currentTurnUserId": zod.number(),
+  "winnerUserId": zod.number().nullish(),
   "isDraw": zod.boolean().optional(),
   "status": zod.enum(['active', 'finished']),
   "state": zod.record(zod.string(), zod.unknown()).describe('Game-specific board\/state as JSON'),
   "createdAt": zod.coerce.date(),
   "finishedAt": zod.coerce.date().nullish(),
   "playerXProfile": zod.object({
-  "clerkId": zod.string(),
+  "id": zod.number(),
+  "email": zod.string(),
   "username": zod.string(),
   "avatarPath": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 }).optional(),
   "playerOProfile": zod.object({
-  "clerkId": zod.string(),
+  "id": zod.number(),
+  "email": zod.string(),
   "username": zod.string(),
   "avatarPath": zod.string().nullish(),
   "createdAt": zod.coerce.date()
@@ -383,18 +455,20 @@ export const GetFlirtMessageParams = zod.object({
 export const GetFlirtMessageResponse = zod.object({
   "id": zod.number(),
   "gameId": zod.number(),
-  "fromClerkId": zod.string(),
-  "toClerkId": zod.string(),
+  "fromUserId": zod.number(),
+  "toUserId": zod.number(),
   "message": zod.string(),
   "createdAt": zod.coerce.date(),
   "fromProfile": zod.object({
-  "clerkId": zod.string(),
+  "id": zod.number(),
+  "email": zod.string(),
   "username": zod.string(),
   "avatarPath": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 }).optional(),
   "toProfile": zod.object({
-  "clerkId": zod.string(),
+  "id": zod.number(),
+  "email": zod.string(),
   "username": zod.string(),
   "avatarPath": zod.string().nullish(),
   "createdAt": zod.coerce.date()
@@ -432,19 +506,9 @@ export const RequestUploadUrlBody = zod.object({
   "contentType": zod.string().min(1)
 })
 
-
-
-
-
-
 export const RequestUploadUrlResponse = zod.object({
   "uploadURL": zod.string().url(),
-  "objectPath": zod.string(),
-  "metadata": zod.object({
-  "name": zod.string().min(1),
-  "size": zod.number().min(1),
-  "contentType": zod.string().min(1)
-}).optional()
+  "objectPath": zod.string()
 })
 
 

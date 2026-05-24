@@ -12,9 +12,9 @@ export interface Room {
   id: number;
   code: string;
   status: RoomStatus;
-  creatorClerkId: string;
+  creatorUserId: number;
   /** @nullable */
-  guestClerkId?: string | null;
+  guestUserId?: number | null;
   creatorProfile?: UserProfile;
   guestProfile?: UserProfile;
   createdAt: Date;

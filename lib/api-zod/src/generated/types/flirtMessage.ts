@@ -10,8 +10,8 @@ import type { UserProfile } from './userProfile';
 export interface FlirtMessage {
   id: number;
   gameId: number;
-  fromClerkId: string;
-  toClerkId: string;
+  fromUserId: number;
+  toUserId: number;
   message: string;
   createdAt: Date;
   fromProfile?: UserProfile;

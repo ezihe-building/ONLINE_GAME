@@ -5,8 +5,8 @@ import { z } from "zod/v4";
 export const flirtMessagesTable = pgTable("flirt_messages", {
   id: serial("id").primaryKey(),
   gameId: integer("game_id").notNull(),
-  fromClerkId: text("from_clerk_id").notNull(),
-  toClerkId: text("to_clerk_id").notNull(),
+  fromUserId: integer("from_user_id").notNull(),
+  toUserId: integer("to_user_id").notNull(),
   message: text("message").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

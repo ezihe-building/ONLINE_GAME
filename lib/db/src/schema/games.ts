@@ -6,10 +6,10 @@ export const gameSessionsTable = pgTable("game_sessions", {
   id: serial("id").primaryKey(),
   roomId: integer("room_id").notNull(),
   gameType: text("game_type").notNull(),
-  playerXClerkId: text("player_x_clerk_id").notNull(),
-  playerOClerkId: text("player_o_clerk_id").notNull(),
-  currentTurnClerkId: text("current_turn_clerk_id").notNull(),
-  winnerClerkId: text("winner_clerk_id"),
+  playerXUserId: integer("player_x_user_id").notNull(),
+  playerOUserId: integer("player_o_user_id").notNull(),
+  currentTurnUserId: integer("current_turn_user_id").notNull(),
+  winnerUserId: integer("winner_user_id"),
   isDraw: boolean("is_draw").notNull().default(false),
   status: text("status").notNull().default("active"),
   state: jsonb("state").notNull().default({}),
@@ -25,7 +25,7 @@ export type GameSession = typeof gameSessionsTable.$inferSelect;
 export const gameMovesTable = pgTable("game_moves", {
   id: serial("id").primaryKey(),
   gameId: integer("game_id").notNull(),
-  playerClerkId: text("player_clerk_id").notNull(),
+  playerUserId: integer("player_user_id").notNull(),
   moveData: jsonb("move_data").notNull().default({}),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

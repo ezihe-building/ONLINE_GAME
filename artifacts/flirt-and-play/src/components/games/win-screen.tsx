@@ -2,9 +2,9 @@ import { useState } from "react";
 import { GameSession, UserProfile, useSendFlirtMessage, useGetFlirtMessage, useRequestRematch } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { Loader2, Heart, RotateCcw, ArrowRight } from "lucide-react";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 
 interface Props {
   game: GameSession;
@@ -17,11 +17,11 @@ export default function WinScreen({ game, me, roomId }: Props) {
   const [flirtText, setFlirtText] = useState("");
   
   const isDraw = game.isDraw;
-  const isWinner = game.winnerClerkId === me.clerkId;
+  const isWinner = game.winnerUserId === me.id;
   const isLoser = !isDraw && !isWinner;
   
-  const opponent = game.playerXClerkId === me.clerkId ? game.playerOProfile : game.playerXProfile;
-  const winnerProfile = game.winnerClerkId === game.playerXClerkId ? game.playerXProfile : game.playerOProfile;
+  const opponent = game.playerXUserId === me.id ? game.playerOProfile : game.playerXProfile;
+  const winnerProfile = game.winnerUserId === game.playerXUserId ? game.playerXProfile : game.playerOProfile;
 
   const sendFlirt = useSendFlirtMessage();
   const requestRematch = useRequestRematch();
@@ -36,7 +36,6 @@ export default function WinScreen({ game, me, roomId }: Props) {
   const handleSendFlirt = (e: React.FormEvent) => {
     e.preventDefault();
     if (!flirtText.trim()) return;
-    
     sendFlirt.mutate({ gameId: game.id, data: { message: flirtText } });
   };
 

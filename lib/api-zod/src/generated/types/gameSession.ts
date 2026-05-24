@@ -13,11 +13,11 @@ export interface GameSession {
   id: number;
   roomId: number;
   gameType: string;
-  playerXClerkId: string;
-  playerOClerkId: string;
-  currentTurnClerkId: string;
+  playerXUserId: number;
+  playerOUserId: number;
+  currentTurnUserId: number;
   /** @nullable */
-  winnerClerkId?: string | null;
+  winnerUserId?: number | null;
   isDraw?: boolean;
   status: GameSessionStatus;
   /** Game-specific board/state as JSON */

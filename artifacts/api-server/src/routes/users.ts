@@ -6,20 +6,23 @@ import { UpdateMeBody } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
+function safeUser(user: typeof usersTable.$inferSelect) {
+  const { passwordHash: _ph, ...safe } = user;
+  return safe;
+}
+
 router.get("/users/me", requireAuth, async (req, res): Promise<void> => {
-  const clerkId = getUserId(req);
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.clerkId, clerkId));
+  const userId = getUserId(req);
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
   if (!user) {
-    const username = `player_${clerkId.slice(-6)}`;
-    const [newUser] = await db.insert(usersTable).values({ clerkId, username }).returning();
-    res.json(newUser);
+    res.status(404).json({ error: "User not found" });
     return;
   }
-  res.json(user);
+  res.json(safeUser(user));
 });
 
 router.put("/users/me", requireAuth, async (req, res): Promise<void> => {
-  const clerkId = getUserId(req);
+  const userId = getUserId(req);
   const parsed = UpdateMeBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -32,25 +35,25 @@ router.put("/users/me", requireAuth, async (req, res): Promise<void> => {
   const [user] = await db
     .update(usersTable)
     .set(updates)
-    .where(eq(usersTable.clerkId, clerkId))
+    .where(eq(usersTable.id, userId))
     .returning();
 
   if (!user) {
     res.status(404).json({ error: "User not found" });
     return;
   }
-  res.json(user);
+  res.json(safeUser(user));
 });
 
 router.get("/users/me/stats", requireAuth, async (req, res): Promise<void> => {
-  const clerkId = getUserId(req);
+  const userId = getUserId(req);
 
   const [wins] = await db
     .select({ count: count() })
     .from(gameSessionsTable)
-    .where(eq(gameSessionsTable.winnerClerkId, clerkId));
+    .where(eq(gameSessionsTable.winnerUserId, userId));
 
-  const [gamesPlayed] = await db
+  const [playerGames] = await db
     .select({ count: count() })
     .from(gameSessionsTable)
     .where(
@@ -59,22 +62,15 @@ router.get("/users/me/stats", requireAuth, async (req, res): Promise<void> => {
       ),
     );
 
-  const [playerGames] = await db
-    .select({ count: count() })
-    .from(gameSessionsTable)
-    .where(
-      and(eq(gameSessionsTable.status, "finished")),
-    );
-
   const [flirtsSent] = await db
     .select({ count: count() })
     .from(flirtMessagesTable)
-    .where(eq(flirtMessagesTable.fromClerkId, clerkId));
+    .where(eq(flirtMessagesTable.fromUserId, userId));
 
   const [flirtsReceived] = await db
     .select({ count: count() })
     .from(flirtMessagesTable)
-    .where(eq(flirtMessagesTable.toClerkId, clerkId));
+    .where(eq(flirtMessagesTable.toUserId, userId));
 
   const winCount = Number(wins.count);
   const gamesCount = Number(playerGames.count);
