@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: flirt-and-play
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: |
+      npm install -g pnpm@10 &&
+      pnpm install --frozen-lockfile &&
+      pnpm run build:prod &&
+      mkdir -p artifacts/api-server/frontend-dist &&
+      cp -r artifacts/flirt-and-play/dist/public/. artifacts/api-server/frontend-dist/
+    startCommand: node artifacts/api-server/dist/index.mjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: flirt-and-play-db
+          property: connectionString
+
+databases:
+  - name: flirt-and-play-db
+    databaseName: flirt_and_play
+    user: flirt_play
+    plan: free
+    region: oregon
