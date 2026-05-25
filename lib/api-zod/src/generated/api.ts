@@ -408,6 +408,45 @@ export const RequestRematchParams = zod.object({
 
 
 /**
+ * @summary Get chat messages for a room
+ */
+export const ListRoomMessagesParams = zod.object({
+  "roomId": zod.coerce.number()
+})
+
+export const ListRoomMessagesResponseItem = zod.object({
+  "id": zod.number(),
+  "roomId": zod.number(),
+  "userId": zod.number(),
+  "userProfile": zod.object({
+  "id": zod.number(),
+  "username": zod.string(),
+  "avatarPath": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+}).optional(),
+  "message": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const ListRoomMessagesResponse = zod.array(ListRoomMessagesResponseItem)
+
+
+/**
+ * @summary Send a chat message to a room
+ */
+export const SendRoomMessageParams = zod.object({
+  "roomId": zod.coerce.number()
+})
+
+export const sendRoomMessageBodyMessageMax = 1000;
+
+
+
+export const SendRoomMessageBody = zod.object({
+  "message": zod.string().min(1).max(sendRoomMessageBodyMessageMax)
+})
+
+
+/**
  * @summary Send a flirt message (loser to winner)
  */
 export const SendFlirtMessageParams = zod.object({

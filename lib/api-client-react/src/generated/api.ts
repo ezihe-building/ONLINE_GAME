@@ -21,6 +21,8 @@ import type {
 
 import type {
   AuthCredentials,
+  ChatMessage,
+  ChatMessageInput,
   ErrorResponse,
   FlirtInput,
   FlirtMessage,
@@ -1074,6 +1076,155 @@ export const useRequestRematch = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getRequestRematchMutationOptions(options));
+    }
+
+export const getListRoomMessagesUrl = (roomId: number,) => {
+
+
+
+
+  return `/api/rooms/${roomId}/messages`
+}
+
+/**
+ * @summary Get chat messages for a room
+ */
+export const listRoomMessages = async (roomId: number, options?: RequestInit): Promise<ChatMessage[]> => {
+
+  return customFetch<ChatMessage[]>(getListRoomMessagesUrl(roomId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListRoomMessagesQueryKey = (roomId: number,) => {
+    return [
+    `/api/rooms/${roomId}/messages`
+    ] as const;
+    }
+
+
+export const getListRoomMessagesQueryOptions = <TData = Awaited<ReturnType<typeof listRoomMessages>>, TError = ErrorType<unknown>>(roomId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listRoomMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListRoomMessagesQueryKey(roomId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listRoomMessages>>> = ({ signal }) => listRoomMessages(roomId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(roomId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listRoomMessages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListRoomMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof listRoomMessages>>>
+export type ListRoomMessagesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get chat messages for a room
+ */
+
+export function useListRoomMessages<TData = Awaited<ReturnType<typeof listRoomMessages>>, TError = ErrorType<unknown>>(
+ roomId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listRoomMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListRoomMessagesQueryOptions(roomId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSendRoomMessageUrl = (roomId: number,) => {
+
+
+
+
+  return `/api/rooms/${roomId}/messages`
+}
+
+/**
+ * @summary Send a chat message to a room
+ */
+export const sendRoomMessage = async (roomId: number,
+    chatMessageInput: ChatMessageInput, options?: RequestInit): Promise<ChatMessage> => {
+
+  return customFetch<ChatMessage>(getSendRoomMessageUrl(roomId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      chatMessageInput,)
+  }
+);}
+
+
+
+
+export const getSendRoomMessageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendRoomMessage>>, TError,{roomId: number;data: BodyType<ChatMessageInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendRoomMessage>>, TError,{roomId: number;data: BodyType<ChatMessageInput>}, TContext> => {
+
+const mutationKey = ['sendRoomMessage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendRoomMessage>>, {roomId: number;data: BodyType<ChatMessageInput>}> = (props) => {
+          const {roomId,data} = props ?? {};
+
+          return  sendRoomMessage(roomId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendRoomMessageMutationResult = NonNullable<Awaited<ReturnType<typeof sendRoomMessage>>>
+    export type SendRoomMessageMutationBody = BodyType<ChatMessageInput>
+    export type SendRoomMessageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Send a chat message to a room
+ */
+export const useSendRoomMessage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendRoomMessage>>, TError,{roomId: number;data: BodyType<ChatMessageInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendRoomMessage>>,
+        TError,
+        {roomId: number;data: BodyType<ChatMessageInput>},
+        TContext
+      > => {
+      return useMutation(getSendRoomMessageMutationOptions(options));
     }
 
 export const getSendFlirtMessageUrl = (gameId: number,) => {

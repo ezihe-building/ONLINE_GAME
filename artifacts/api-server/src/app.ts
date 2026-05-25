@@ -3,12 +3,19 @@ import cors from "cors";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import pinoHttp from "pino-http";
+import path from "path";
+import { mkdirSync } from "fs";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
 
 const app: Express = express();
 const isProd = process.env.NODE_ENV === "production";
+
+// Ensure uploads dir exists and serve it statically
+const uploadsDir = path.join(process.cwd(), "uploads");
+mkdirSync(uploadsDir, { recursive: true });
+app.use("/api/uploads", express.static(uploadsDir));
 
 app.use(
   pinoHttp({
@@ -34,7 +41,7 @@ app.use(
   session({
     store: new PgSession({
       pool,
-      createTableIfMissing: true,
+      createTableIfMissing: false,
     }),
     secret: process.env.SESSION_SECRET || "flirt-and-play-dev-secret",
     resave: false,

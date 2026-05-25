@@ -134,6 +134,23 @@ export interface FlirtInput {
   message: string;
 }
 
+export interface ChatMessage {
+  id: number;
+  roomId: number;
+  userId: number;
+  userProfile?: UserProfile;
+  message: string;
+  createdAt: string;
+}
+
+export interface ChatMessageInput {
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  message: string;
+}
+
 export interface FlirtMessage {
   id: number;
   gameId: number;

@@ -7,6 +7,8 @@
  */
 
 export * from './authCredentials';
+export * from './chatMessage';
+export * from './chatMessageInput';
 export * from './errorResponse';
 export * from './flirtInput';
 export * from './flirtMessage';

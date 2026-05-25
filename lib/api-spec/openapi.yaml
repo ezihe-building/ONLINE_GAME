@@ -314,6 +314,50 @@ paths:
               schema:
                 $ref: "#/components/schemas/GameSession"
 
+  /rooms/{roomId}/messages:
+    get:
+      operationId: listRoomMessages
+      tags: [rooms]
+      summary: Get chat messages for a room
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Chat messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatMessage"
+    post:
+      operationId: sendRoomMessage
+      tags: [rooms]
+      summary: Send a chat message to a room
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatMessageInput"
+      responses:
+        "201":
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatMessage"
+
   /games/{gameId}/flirt:
     post:
       operationId: sendFlirtMessage
@@ -515,6 +559,33 @@ components:
           type: string
           minLength: 1
           maxLength: 500
+      required: [message]
+
+    ChatMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        roomId:
+          type: integer
+        userId:
+          type: integer
+        userProfile:
+          $ref: "#/components/schemas/UserProfile"
+        message:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, roomId, userId, message, createdAt]
+
+    ChatMessageInput:
+      type: object
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 1000
       required: [message]
 
     FlirtMessage:
