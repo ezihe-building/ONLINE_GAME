@@ -1,20 +1,21 @@
-# [Project name]
+# Flirt & Play
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A sexy multiplayer game platform where two players battle across 5 games — and the loser owes the winner a flirt message.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/api-server run dev` — run the API server (port 8080)
+- `pnpm --filter @workspace/flirt-and-play run dev` — run the frontend
 - `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Required env: `DATABASE_URL` — Postgres connection string, `SESSION_SECRET` — session signing secret
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
+- Frontend: React + Vite + TailwindCSS + shadcn/ui + wouter
+- API: Express 5 + express-session + bcryptjs
 - DB: PostgreSQL + Drizzle ORM
 - Validation: Zod (`zod/v4`), `drizzle-zod`
 - API codegen: Orval (from OpenAPI spec)
@@ -22,23 +23,38 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `lib/api-spec/openapi.yaml` — API contract (source of truth)
+- `lib/db/src/schema/` — Drizzle schema (users, rooms, games, flirt messages)
+- `artifacts/api-server/src/routes/` — Express route handlers
+- `artifacts/flirt-and-play/src/` — React frontend
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Contract-first: OpenAPI spec gates all codegen → hooks → frontend
+- Session-based auth (express-session + connect-pg-simple) — cookies, no JWTs
+- Game state stored as JSONB in PostgreSQL — flexible for 5 different game types
+- Turn enforcement on server side — clients poll every 1.5s while game is active
+- Flirt mechanic: loser sends message after game finishes, winner polls until received
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+5 multiplayer games (Tic Tac Toe, Connect Four, Rock Paper Scissors, Word Duel, Truth Spinner) in private rooms with invite codes. Loser of each game must send the winner a flirt message. Full game history and replay.
 
-## User preferences
+## Games
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- **Tic Tac Toe** — classic 3×3
+- **Connect Four** — drop discs, connect 4
+- **Rock Paper Scissors** — best of 3 rounds (simultaneous choice)
+- **Word Duel** — Wordle-style: one player sets a 5-letter secret, the other guesses
+- **Truth Spinner** — spin the wheel, answer truths, rack up points
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Always run codegen after changing `lib/api-spec/openapi.yaml`
+- `pnpm --filter @workspace/db run push` after schema changes
+- Game state is stored as `boardState` JSONB — each game type has its own structure
+- RPS is simultaneous: both players can move in the same round
+- Word Duel phase: `setting` (playerX sets word) → `guessing` (playerO guesses)
 
 ## Pointers
 
