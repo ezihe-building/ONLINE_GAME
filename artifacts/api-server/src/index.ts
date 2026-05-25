@@ -32,14 +32,9 @@ async function ensureSessionTable() {
 async function start() {
   await ensureSessionTable();
 
-  // Import app after DB is ready
   const { default: app } = await import("./app.js");
 
-  app.listen(port, (err?: Error) => {
-    if (err) {
-      logger.error({ err }, "Error listening on port");
-      process.exit(1);
-    }
+  app.listen(port, () => {
     logger.info({ port }, "Server listening");
   });
 }

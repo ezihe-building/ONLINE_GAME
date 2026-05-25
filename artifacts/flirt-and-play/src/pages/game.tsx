@@ -28,6 +28,7 @@ export default function Game() {
   
   const { data: game, isLoading: isGameLoading } = useGetGame(gId, { 
     query: { 
+      queryKey: getGetGameQueryKey(gId),
       enabled: !!user && !!gId,
       refetchInterval: (query) => query.state.data?.status === 'active' ? 1500 : false
     } 

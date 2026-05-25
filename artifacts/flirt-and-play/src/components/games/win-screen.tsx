@@ -4,6 +4,7 @@ import {
   UserProfile, 
   useSendFlirtMessage, 
   useGetFlirtMessage,
+  getGetFlirtMessageQueryKey,
   useRequestRematch
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ export default function WinScreen({ game, user, roomId }: WinScreenProps) {
 
   const { data: flirtData } = useGetFlirtMessage(game.id, {
     query: {
+      queryKey: getGetFlirtMessageQueryKey(game.id),
       enabled: amIWinner && !game.flirtSent,
       refetchInterval: 2000
     }
@@ -44,13 +46,13 @@ export default function WinScreen({ game, user, roomId }: WinScreenProps) {
       onSuccess: () => {
         toast({ title: "Dare complete", description: "Message sent to the winner." });
       },
-      onError: (err) => toast({ title: "Failed", description: err.error?.error, variant: "destructive" })
+      onError: (err) => toast({ title: "Failed", description: err.data?.error, variant: "destructive" })
     });
   };
 
   const handleRematch = () => {
     requestRematch.mutate({ gameId: game.id }, {
-      onError: (err) => toast({ title: "Failed", description: err.error?.error, variant: "destructive" })
+      onError: (err) => toast({ title: "Failed", description: (err.data as {error?: string} | null)?.error, variant: "destructive" })
     });
   };
 

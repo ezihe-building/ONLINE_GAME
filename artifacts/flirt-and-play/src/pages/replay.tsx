@@ -1,4 +1,4 @@
-import { useGetGame } from "@workspace/api-client-react";
+import { useGetGame, getGetGameQueryKey } from "@workspace/api-client-react";
 import { useParams, Link } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ export default function Replay() {
   const gId = parseInt(gameId || '0');
   const rId = parseInt(roomId || '0');
   
-  const { data: game, isLoading } = useGetGame(gId, { query: { enabled: !!gId } });
+  const { data: game, isLoading } = useGetGame(gId, { query: { queryKey: getGetGameQueryKey(gId), enabled: !!gId } });
 
   if (isLoading) return <Layout><div className="flex-1 flex items-center justify-center">Loading...</div></Layout>;
   if (!game) return <Layout><div className="flex-1 flex items-center justify-center">Game not found</div></Layout>;

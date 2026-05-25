@@ -15,7 +15,7 @@ import { format } from "date-fns";
 export default function Lobby() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const [, setLocation] = useLocation();
-  const { data: rooms, isLoading: isRoomsLoading } = useListRooms({ query: { enabled: !!user } });
+  const { data: rooms, isLoading: isRoomsLoading } = useListRooms({ query: { queryKey: getListRoomsQueryKey(), enabled: !!user } });
   const createRoom = useCreateRoom();
   const joinRoom = useJoinRoom();
   const { toast } = useToast();
@@ -43,7 +43,7 @@ export default function Lobby() {
         setCreateName("");
         setLocation(`/rooms/${room.id}`);
       },
-      onError: (err) => toast({ title: "Error", description: err.error?.error || "Could not create room", variant: "destructive" })
+      onError: (err) => toast({ title: "Error", description: (err.data as {error?: string} | null)?.error || "Could not create room", variant: "destructive" })
     });
   };
 
@@ -57,7 +57,7 @@ export default function Lobby() {
         setJoinCode("");
         setLocation(`/rooms/${room.id}`);
       },
-      onError: (err) => toast({ title: "Error", description: err.error?.error || "Could not join room", variant: "destructive" })
+      onError: (err) => toast({ title: "Error", description: err.data?.error || "Could not join room", variant: "destructive" })
     });
   };
 

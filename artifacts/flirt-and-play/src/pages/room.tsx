@@ -4,8 +4,10 @@ import { useAuth } from "@/lib/auth";
 import { Layout } from "@/components/layout";
 import {
   useGetRoom,
+  getGetRoomQueryKey,
   useStartGame,
   useGetRoomHistory,
+  getGetRoomHistoryQueryKey,
   useListRoomMessages,
   useSendRoomMessage,
   getListRoomMessagesQueryKey,
@@ -40,11 +42,11 @@ export default function Room() {
   const id = parseInt(roomId || "0");
 
   const { data: room, isLoading: isRoomLoading } = useGetRoom(id, {
-    query: { enabled: !!user && !!id },
+    query: { queryKey: getGetRoomQueryKey(id), enabled: !!user && !!id },
   });
 
   const { data: history } = useGetRoomHistory(id, {
-    query: { enabled: !!user && !!id },
+    query: { queryKey: getGetRoomHistoryQueryKey(id), enabled: !!user && !!id },
   });
 
   const { data: messages } = useListRoomMessages(id, {

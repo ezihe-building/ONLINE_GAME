@@ -4,7 +4,7 @@ import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import pinoHttp from "pino-http";
 import path from "path";
-import { mkdirSync } from "fs";
+import { mkdirSync, existsSync } from "fs";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
@@ -12,7 +12,12 @@ import { pool } from "@workspace/db";
 const app: Express = express();
 const isProd = process.env.NODE_ENV === "production";
 
-// Ensure uploads dir exists and serve it statically
+// Trust the first proxy (required for secure cookies behind Render's load balancer)
+if (isProd) {
+  app.set("trust proxy", 1);
+}
+
+// Ensure uploads dir exists and serve it statically under /api/uploads
 const uploadsDir = path.join(process.cwd(), "uploads");
 mkdirSync(uploadsDir, { recursive: true });
 app.use("/api/uploads", express.static(uploadsDir));
@@ -55,6 +60,21 @@ app.use(
   }),
 );
 
+// API routes
 app.use("/api", router);
+
+// In production, serve the pre-built frontend for all non-API routes
+if (isProd) {
+  const frontendDir = path.resolve(process.cwd(), "frontend-dist");
+  if (existsSync(frontendDir)) {
+    app.use(express.static(frontendDir));
+    // Catch-all: serve index.html for any unmatched route (SPA client-side routing)
+    app.use((_req, res) => {
+      res.sendFile(path.join(frontendDir, "index.html"));
+    });
+  } else {
+    logger.warn({ frontendDir }, "frontend-dist not found — static serving disabled");
+  }
+}
 
 export default app;
