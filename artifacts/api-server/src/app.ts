@@ -63,9 +63,10 @@ app.use(
 // API routes
 app.use("/api", router);
 
-// In production, serve the pre-built frontend for all non-API routes
+// In production, serve the pre-built frontend for all non-API routes.
+// __dirname resolves to the compiled dist/ folder; frontend-dist sits one level up.
 if (isProd) {
-  const frontendDir = path.resolve(process.cwd(), "frontend-dist");
+  const frontendDir = path.resolve(__dirname, "../frontend-dist");
   if (existsSync(frontendDir)) {
     app.use(express.static(frontendDir));
     // Catch-all: serve index.html for any unmatched route (SPA client-side routing)
