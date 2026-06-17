@@ -4,9 +4,9 @@ import { z } from "zod/v4";
 
 export const usersTable = pgTable("users", {
   id: serial("id").primaryKey(),
-  email: text("email").notNull().unique(),
+  email: text("email").unique(),
   passwordHash: text("password_hash").notNull(),
-  username: text("username").notNull(),
+  username: text("username").notNull().unique(),
   avatarPath: text("avatar_path"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

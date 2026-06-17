@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/auth";
 export default function SignIn() {
   const [, setLocation] = useLocation();
   const { refresh } = useAuth();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -24,7 +24,7 @@ export default function SignIn() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -55,20 +55,20 @@ export default function SignIn() {
         <Card className="bg-card border-border shadow-2xl">
           <CardHeader className="text-center pb-2">
             <CardTitle className="text-2xl font-display font-bold">Welcome back</CardTitle>
-            <CardDescription>Sign in to your account</CardDescription>
+            <CardDescription>Enter your details to get back in the game</CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="username">Username</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="username"
+                  type="text"
+                  placeholder="Your username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
-                  autoComplete="email"
+                  autoComplete="username"
                   className="bg-input border-border"
                 />
               </div>
@@ -96,15 +96,15 @@ export default function SignIn() {
                 disabled={isLoading}
               >
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                Sign In
+                Log in
               </Button>
             </form>
           </CardContent>
           <CardFooter className="justify-center">
             <p className="text-sm text-muted-foreground">
-              No account?{" "}
+              Don't have an account?{" "}
               <Link href="/sign-up" className="text-primary hover:text-primary/80 font-medium transition-colors">
-                Sign up free
+                Register
               </Link>
             </p>
           </CardFooter>
