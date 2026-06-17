@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 
 export interface AuthUser {
   id: number;
-  email: string;
+  email: string | null;
   username: string;
   avatarPath: string | null;
   createdAt: string;

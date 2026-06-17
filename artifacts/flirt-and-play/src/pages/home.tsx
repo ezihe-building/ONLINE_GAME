@@ -16,10 +16,10 @@ export default function Home() {
           <span className="font-display font-bold text-xl tracking-tight">Flirt & Play</span>
         </div>
         <div className="flex gap-4">
-          <Link href="/sign-in">
+          <Link href="/login">
             <Button variant="ghost" className="text-muted-foreground hover:text-foreground">Log in</Button>
           </Link>
-          <Link href="/sign-up">
+          <Link href="/register">
             <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium">Get started</Button>
           </Link>
         </div>
@@ -33,7 +33,7 @@ export default function Home() {
           A private parlor for late-night energy. Play classic games with a daring twist. Loser owes a flirt.
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
-          <Link href="/sign-up">
+          <Link href="/register">
             <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 text-lg px-8 h-14 rounded-full font-medium shadow-[0_0_40px_-10px_rgba(236,72,153,0.5)] transition-all hover:shadow-[0_0_60px_-10px_rgba(236,72,153,0.6)] hover:scale-105">
               Create your parlor
             </Button>

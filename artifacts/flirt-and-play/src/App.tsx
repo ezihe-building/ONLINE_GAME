@@ -12,8 +12,8 @@ import Room from "@/pages/room";
 import Profile from "@/pages/profile";
 import Game from "@/pages/game";
 import Replay from "@/pages/replay";
-import SignIn from "@/pages/sign-in";
-import SignUp from "@/pages/sign-up";
+import Login from "@/pages/login";
+import Register from "@/pages/register";
 
 const queryClient = new QueryClient();
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -28,7 +28,7 @@ function HomeRedirect() {
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, isLoading } = useAuth();
   if (isLoading) return null;
-  if (!user) return <Redirect to="/sign-in" />;
+  if (!user) return <Redirect to="/login" />;
   return <Component />;
 }
 
@@ -36,8 +36,8 @@ function AppRoutes() {
   return (
     <Switch>
       <Route path="/" component={HomeRedirect} />
-      <Route path="/sign-in" component={SignIn} />
-      <Route path="/sign-up" component={SignUp} />
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
       <Route path="/lobby"><ProtectedRoute component={Lobby} /></Route>
       <Route path="/profile"><ProtectedRoute component={Profile} /></Route>
       <Route path="/rooms/new"><ProtectedRoute component={RoomNew} /></Route>
