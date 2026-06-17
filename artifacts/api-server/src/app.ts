@@ -1,6 +1,5 @@
 import express, { type Express } from "express";
 import cors from "cors";
-import session from "express-session";
 import pinoHttp from "pino-http";
 import path from "path";
 import { existsSync } from "fs";
@@ -15,32 +14,23 @@ app.use(
     logger,
     serializers: {
       req(req) {
-        return { id: req.id, method: req.method, url: req.url?.split("?")[0] };
+        return {
+          id: req.id,
+          method: req.method,
+          url: req.url?.split("?")[0],
+        };
       },
       res(res) {
-        return { statusCode: res.statusCode };
+        return {
+          statusCode: res.statusCode,
+        };
       },
     },
   }),
 );
-
-app.use(cors({ credentials: true, origin: true }));
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "flirt-and-play-dev-secret",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? "none" : false,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    },
-  }),
-);
 
 app.use("/api", router);
 
@@ -49,7 +39,8 @@ if (isProd) {
   const staticDir = path.join(__dirname, "..", "frontend-dist");
   if (existsSync(staticDir)) {
     app.use(express.static(staticDir));
-    app.get("*", (_req, res) => {
+    // Express 5 compatible catch-all fallback for SPA client-side routing
+    app.use((req, res) => {
       res.sendFile(path.join(staticDir, "index.html"));
     });
   }
