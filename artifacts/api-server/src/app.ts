@@ -46,7 +46,7 @@ app.use("/api", router);
 
 // Serve frontend static files in production
 if (isProd) {
-  const staticDir = path.resolve(process.cwd(), "frontend-dist");
+  const staticDir = path.join(__dirname, "..", "frontend-dist");
   if (existsSync(staticDir)) {
     app.use(express.static(staticDir));
     app.get("*", (_req, res) => {
