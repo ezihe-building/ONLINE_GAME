@@ -50,10 +50,9 @@ router.post("/storage/uploads/request-url", async (req: Request, res: Response) 
  * These are unconditionally public — no authentication or ACL checks.
  * IMPORTANT: Always provide this endpoint when object storage is set up.
  */
-router.get("/storage/public-objects/{*filePath}", async (req: Request, res: Response) => {
+router.get("/storage/public-objects/:filePath(*)", async (req: Request, res: Response) => {
   try {
-    const raw = req.params.filePath;
-    const filePath = Array.isArray(raw) ? raw.join("/") : raw;
+    const filePath = req.params.filePath || "";
     const file = await objectStorageService.searchPublicObject(filePath);
     if (!file) {
       res.status(404).json({ error: "File not found" });
@@ -84,10 +83,9 @@ router.get("/storage/public-objects/{*filePath}", async (req: Request, res: Resp
  * These are served from a separate path from /public-objects and can optionally
  * be protected with authentication or ACL checks based on the use case.
  */
-router.get("/storage/objects/{*path}", async (req: Request, res: Response) => {
+router.get("/storage/objects/:path(*)", async (req: Request, res: Response) => {
   try {
-    const raw = req.params.path;
-    const wildcardPath = Array.isArray(raw) ? raw.join("/") : raw;
+    const wildcardPath = req.params.path || "";
     const objectPath = `/objects/${wildcardPath}`;
     const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
 
